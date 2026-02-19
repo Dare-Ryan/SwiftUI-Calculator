@@ -94,21 +94,111 @@ final class CalculatorViewModel: ObservableObject {
         ButtonType.operation(.equals)
     ]
     
-    private var firstOperand: Int?
-    private var secondOperand: Int?
-    
+    private var firstOperand: Double?
+    private var secondOperand: Double?
+    private var currentOperator: ButtonType.Operation?
     
     func calculatorButtonPressed(_ buttonType: ButtonType) {
         switch buttonType {
-        case .numeric(_):
-            calculationResult += buttonType.text
-        case .function(_):
+        case .numeric(let value):
+            switch value {
+            case .toggleNegative:
+                toggleNegative()
+            case .decimalPoint:
+                setDecimalPointIfNeeded()
+            default:
+                calculationResult += value.rawValue
+            }
+        case .function(let function):
+            switch function {
+            case .backspace:
+                backspace()
+            case .allClear:
+                clear()
+            case .percent:
+                calculationResult = "\(resultPercentage())"
+            }
             return
-        case .operation(_):
+        case .operation(let operation):
+            switch operation {
+            case .equals:
+                setSecondOperand()
+                calculate()
+            default :
+                setFirstOperand()
+                calculationResult = ""
+                currentOperator = operation
+            }
+        }
+    }
+    
+    func clear() {
+        calculationResult = ""
+        firstOperand = nil
+        secondOperand = nil
+    }
+    
+    func resultPercentage() -> Double {
+        guard let value = Double(calculationResult) else {
+            return 0
+        }
+        return value / 100
+    }
+    
+    func toggleNegative() {
+        if calculationResult.first == "-" {
+            calculationResult.removeFirst()
+        } else {
+            calculationResult = "-\(calculationResult)"
+        }
+    }
+    
+    func setDecimalPointIfNeeded() {
+        guard !calculationResult.contains(where: { $0 == "." }) else {
+            return
+        }
+        calculationResult += "."
+    }
+    
+    func backspace() {
+        guard !calculationResult.isEmpty else {
+            return
+        }
+        calculationResult.removeLast()
+    }
+    
+    func setFirstOperand() {
+        firstOperand = Double(calculationResult)
+    }
+    
+    func setSecondOperand() {
+        secondOperand = Double(calculationResult)
+    }
+    
+    func calculate() {
+        guard let currentOperator = currentOperator,
+        let firstOperand = firstOperand,
+        let secondOperand = secondOperand else {
+            calculationResult = "Error"
             return
         }
         
+        switch currentOperator {
+        case .division:
+            calculationResult = "\(firstOperand / secondOperand)"
+        case .multiplication:
+            calculationResult = "\(firstOperand * secondOperand)"
+        case .subtraction:
+            calculationResult = "\(firstOperand - secondOperand)"
+        case .addition:
+            calculationResult = "\(firstOperand + secondOperand)"
+        case .equals:
+            return
+        }
         
+        setFirstOperand()
+        self.secondOperand = nil
+        self.currentOperator = nil
     }
     
 }
