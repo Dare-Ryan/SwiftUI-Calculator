@@ -118,7 +118,6 @@ final class CalculatorViewModel: ObservableObject {
             case .percent:
                 calculationResult = "\(resultPercentage())"
             }
-            return
         case .operation(let operation):
             switch operation {
             case .equals:
