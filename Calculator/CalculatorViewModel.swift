@@ -116,7 +116,7 @@ final class CalculatorViewModel: ObservableObject {
             case .allClear:
                 clear()
             case .percent:
-                calculationResult = "\(resultPercentage())"
+                calculatePercentage()
             }
         case .operation(let operation):
             switch operation {
@@ -137,11 +137,19 @@ final class CalculatorViewModel: ObservableObject {
         secondOperand = nil
     }
     
-    func resultPercentage() -> Double {
-        guard let value = Double(calculationResult) else {
-            return 0
+    func calculatePercentage() {
+        if let firstOperand = firstOperand,
+           let _ = currentOperator,
+           let value = Double(calculationResult) { //First operand has been set, take a percentage from that number
+            secondOperand = firstOperand * (value / 100)
+            calculate()
+        } else { //First operand has not been set
+            guard let value = Double(calculationResult) else {
+                calculationResult = "0"
+                return
+            }
+            calculationResult = "\(value / 100)"
         }
-        return value / 100
     }
     
     func toggleNegative() {
@@ -176,8 +184,8 @@ final class CalculatorViewModel: ObservableObject {
     
     func calculate() {
         guard let currentOperator = currentOperator,
-        let firstOperand = firstOperand,
-        let secondOperand = secondOperand else {
+              let firstOperand = firstOperand,
+              let secondOperand = secondOperand else {
             calculationResult = "Error"
             return
         }
